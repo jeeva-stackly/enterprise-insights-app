@@ -173,20 +173,22 @@ What changed in the numbers: KPI cards now show the 30-day window described in s
 
 
 
-![Orders table]
+![Orders table](postgres-orders-table.png)
 
 
 
 
-![Customers table]
+![Customers table](postgres-customers-table.png)
 
 
 
-**Swagger – `GET /api/dashboard`**
+
+![Swagger 1](swagger-dashboard-1.png)
 
 
 
-![Swagger dashboard]
+
+![Swagger 2](swagger-dashboard-2.png)
 
 
 

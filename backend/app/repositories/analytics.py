@@ -10,7 +10,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, NamedTuple
 
-from sqlalchemy import Date, case, distinct, func, select
+from sqlalchemy import Date, case, distinct,extract, func, select
 from sqlalchemy.orm import Session
 
 from app.models import Category, Order, Product
@@ -133,3 +133,27 @@ def category_revenue(db: Session, category_id: int, start: datetime, end: dateti
         )
     )
     return _dec(db.scalar(stmt))
+class HourlyRevenue(NamedTuple):
+    hour: int
+    revenue: Decimal
+    completed_orders: int
+
+
+def hourly_revenue(db: Session, start: datetime, end: datetime) -> list[HourlyRevenue]:
+    """Completed revenue grouped by hour of day (UTC). Used when the range is a single day."""
+    column = Order.ordered_at
+    if db.get_bind().dialect.name == "postgresql":
+        # extract(hour ...) on timestamptz uses the session time zone; force UTC.
+        column = func.timezone("UTC", Order.ordered_at)
+    hour = extract("hour", column).label("hour")
+    stmt = (
+        select(
+            hour,
+            func.coalesce(func.sum(case((COMPLETED, Order.total_amount), else_=0)), 0),
+            func.coalesce(func.sum(case((COMPLETED, 1), else_=0)), 0),
+        )
+        .where(Order.ordered_at >= start, Order.ordered_at < end)
+        .group_by(hour)
+        .order_by(hour)
+    )
+    return [HourlyRevenue(int(h), _dec(rev), int(n)) for h, rev, n in db.execute(stmt).all()]

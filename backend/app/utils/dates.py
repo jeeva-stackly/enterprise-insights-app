@@ -53,3 +53,32 @@ def percent_change(current: Decimal, previous: Decimal) -> float:
     if previous == 0:
         return 0.0
     return round(float((current - previous) / previous * 100), 1)
+def shift_years(d: date, years: int) -> date:
+    """Same calendar day `years` earlier/later (29 Feb falls back to 28 Feb)."""
+    try:
+        return d.replace(year=d.year + years)
+    except ValueError:
+        return d.replace(year=d.year + years, day=28)
+
+
+def previous_range(start: date, end: date, comparison: str) -> tuple[date, date]:
+    """The comparison range: the same length right before `start`, or the same dates a year ago."""
+    if comparison == "previous_year":
+        return shift_years(start, -1), shift_years(end, -1)
+    days = (end - start).days + 1
+    return start - timedelta(days=days), start - timedelta(days=1)
+
+
+def change_percent(current: Decimal, previous: Decimal) -> float | None:
+    """Percent change, or None when the previous value is 0 (undefined, never divide by zero)."""
+    if previous == 0:
+        return None
+    return round(float((current - previous) / previous * 100), 1)
+
+
+def direction_of(current: Decimal, previous: Decimal) -> str:
+    if current > previous:
+        return "up"
+    if current < previous:
+        return "down"
+    return "flat"

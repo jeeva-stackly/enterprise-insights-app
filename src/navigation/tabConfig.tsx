@@ -17,4 +17,5 @@ export const TAB_META: Record<keyof MainTabParamList, TabMeta> = {
   Analytics: { label: 'Analytics', icon: 'bar-chart-outline', iconActive: 'bar-chart' },
   Alerts: { label: 'Alerts', icon: 'notifications-outline', iconActive: 'notifications' },
   Profile: { label: 'Profile', icon: 'person-outline', iconActive: 'person' },
+  UserManagement: { label: 'Users', icon: 'people-outline', iconActive: 'people' },
 };

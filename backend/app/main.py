@@ -10,7 +10,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.db.session import get_db
-from app.routers import activities, analytics, customers, dashboard, orders
+from app.routers import activities, analytics, auth, customers, dashboard, orders, users
+from app.services.errors import DomainError
 
 logger = logging.getLogger("app.db")
 settings = get_settings()
@@ -25,7 +26,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for router_module in (dashboard, orders, customers, analytics, activities):
+for router_module in (auth, users, dashboard, orders, customers, analytics, activities):
     app.include_router(router_module.router)
 
 
@@ -45,6 +46,14 @@ async def _database_unavailable(_: Request, exc: Exception) -> JSONResponse:
 async def _database_error(_: Request, exc: Exception) -> JSONResponse:
     logger.error("Database query failed: %s", type(exc).__name__)
     return JSONResponse(status_code=500, content={"detail": "A database error occurred."})
+
+# ---------------------------------------------------------------------------
+# Business-rule errors (wrong credentials, duplicate email, last admin, ...) -> {"detail": "..."}
+# ---------------------------------------------------------------------------
+@app.exception_handler(DomainError)
+async def _domain_error(_: Request, exc: DomainError) -> JSONResponse:
+    headers = {"WWW-Authenticate": "Bearer"} if exc.status_code == 401 else None
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail}, headers=headers)
 
 
 # Connection refused / server down / pool exhausted  -> 503 (retryable)

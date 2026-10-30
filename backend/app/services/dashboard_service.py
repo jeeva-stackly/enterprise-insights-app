@@ -10,6 +10,7 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.models import User
 from app.repositories import activities as activities_repo
 from app.repositories import analytics as analytics_repo
 from app.schemas.dashboard import (
@@ -37,7 +38,7 @@ ACTIVITY_TITLES = {
 }
 
 
-def get_dashboard(db: Session, today: date | None = None) -> DashboardResponse:
+def get_dashboard(db: Session, today: date | None = None, user: User | None = None) -> DashboardResponse:
     settings = get_settings()
     today = today or utc_today()
     days = settings.kpi_period_days
@@ -78,10 +79,10 @@ def get_dashboard(db: Session, today: date | None = None) -> DashboardResponse:
 
     return DashboardResponse(
         user=UserProfile(
-            id=settings.default_user_id,
-            name=settings.default_user_name,
-            role=settings.default_user_role,
-            unread_notifications=activities_repo.count_alerts_since(db, utc_now() - timedelta(days=7)),
+                       id=str(user.id) if user else settings.default_user_id,
+                       name=user.full_name if user else settings.default_user_name,
+                       role=user.role.capitalize() if user else settings.default_user_role,
+                       unread_notifications=activities_repo.count_alerts_since(db, utc_now() - timedelta(days=7)),
         ),
         kpis=kpis,
         analytics=Analytics(

@@ -6,8 +6,9 @@ from app.routers.deps import Limit, Offset
 from app.schemas.activity import ActivityOut
 from app.schemas.common import Page
 from app.services import activity_service
-
-router = APIRouter(prefix="/api", tags=["Activities"])
+from app.core.auth import require_permission
+from app.core.permissions import Permission
+router = APIRouter(prefix="/api", tags=["Activities"], dependencies=[Depends(require_permission(Permission.VIEW_ACTIVITIES))])
 
 
 @router.get("/activities", response_model=Page[ActivityOut], summary="Recent business activities (newest first)")

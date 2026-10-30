@@ -7,8 +7,10 @@ from app.db.session import get_db
 from app.schemas.analytics import AnalyticsOverviewResponse, ComparisonPeriod, RevenueTrendResponse
 from app.services import analytics_service
 from app.utils.dates import resolve_date_range, utc_today
+from app.core.auth import require_permission
+from app.core.permissions import Permission
 
-router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
+router = APIRouter(prefix="/api/analytics", tags=["Analytics"], dependencies=[Depends(require_permission(Permission.VIEW_ANALYTICS))])
 
 
 @router.get(

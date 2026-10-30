@@ -6,8 +6,10 @@ from app.routers.deps import Limit, Offset
 from app.schemas.common import Page
 from app.schemas.customer import CustomerOut, CustomerStatus
 from app.services import customer_service
+from app.core.auth import require_permission
+from app.core.permissions import Permission
 
-router = APIRouter(prefix="/api", tags=["Customers"])
+router = APIRouter(prefix="/api", tags=["Customers"], dependencies=[Depends(require_permission(Permission.VIEW_ANALYTICS))])
 
 
 @router.get("/customers", response_model=Page[CustomerOut], summary="List customers (paginated)")

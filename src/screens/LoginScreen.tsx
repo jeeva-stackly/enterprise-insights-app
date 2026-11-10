@@ -43,7 +43,7 @@ export function LoginScreen(): React.JSX.Element {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false); // blocks double taps before state re-renders
-  const passwordRef = useRef<TextInput>(null);
+  const passwordRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   async function handleSubmit(): Promise<void> {
     if (submittingRef.current) return;

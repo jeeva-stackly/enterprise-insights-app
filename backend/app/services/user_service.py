@@ -8,8 +8,10 @@ from app.repositories import users as users_repo
 from app.schemas.auth import UserOut
 from app.schemas.common import Page
 from app.schemas.user import UserCreate
+from app.services import notification_service
 from app.services.auth_service import to_user_out
 from app.services.errors import ConflictError, NotFoundError
+from app.utils.dates import utc_now
 
 LAST_ADMIN_MESSAGE = "At least one active administrator is required. Make another user an active admin first."
 
@@ -36,6 +38,9 @@ def create_user(db: Session, data: UserCreate) -> UserOut:
         db.rollback()
         raise ConflictError("A user with this email already exists.") from None
     db.refresh(user)
+    notification_service.notify_system(
+        db, "User Created", f"{user.full_name} was added as {user.role}.", f"user-created:{user.id}"
+    )
     return to_user_out(user)
 
 
@@ -45,6 +50,9 @@ def change_role(db: Session, user_id: int, role: Role) -> UserOut:
         _ensure_another_admin(db, user)
     user.role = role.value
     db.commit()
+    notification_service.notify_system(
+        db, "User Role Changed", f"{user.full_name} is now {user.role}.", f"user-role:{user.id}:{utc_now().isoformat()}"
+    )
     return to_user_out(user)
 
 
@@ -54,6 +62,13 @@ def change_status(db: Session, user_id: int, status: UserStatus) -> UserOut:
         _ensure_another_admin(db, user)
     user.status = status.value
     db.commit()
+    notification_service.notify_system(
+        db,
+        "User Status Changed",
+        f"{user.full_name} is now {user.status}.",
+        f"user-status:{user.id}:{utc_now().isoformat()}",
+        "high" if status == UserStatus.DISABLED else "medium",
+    )
     return to_user_out(user)
 
 

@@ -64,7 +64,7 @@ interface RequestOptions {
   auth?: boolean;
 }
 
-type Method = 'GET' | 'POST' | 'PATCH';
+type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
 async function readDetail(response: Response): Promise<string | undefined> {
   try {
@@ -101,6 +101,8 @@ async function request<T>(method: Method, path: string, options: RequestOptions 
     if (!response.ok) {
       throw await toApiError(response, method, path, auth ? token : null, auth);
     }
+
+    if (response.status === 204) return undefined as T; // e.g. DELETE: success without a body
 
     try {
       return (await response.json()) as T;
@@ -159,4 +161,8 @@ export function apiPost<T>(path: string, body: unknown, options?: Pick<RequestOp
 
 export function apiPatch<T>(path: string, body: unknown, signal?: AbortSignal): Promise<T> {
   return request<T>('PATCH', path, { body, signal });
+}
+
+export function apiDelete(path: string, signal?: AbortSignal): Promise<void> {
+  return request<void>('DELETE', path, { signal });
 }

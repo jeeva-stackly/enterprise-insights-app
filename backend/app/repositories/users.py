@@ -1,5 +1,8 @@
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
+from collections.abc import Iterable
+
+from sqlalchemy import func, select
 
 from app.models import User
 
@@ -23,3 +26,8 @@ def count_active_admins(db: Session, exclude_id: int | None = None) -> int:
     if exclude_id is not None:
         stmt = stmt.where(User.id != exclude_id)
     return db.scalar(stmt) or 0
+
+def list_active_by_roles(db: Session, roles: Iterable[str]) -> list[User]:
+    """Active users holding one of `roles` (the recipients of a notification)."""
+    stmt = select(User).where(User.status == "active", User.role.in_(list(roles))).order_by(User.id)
+    return list(db.scalars(stmt).all())

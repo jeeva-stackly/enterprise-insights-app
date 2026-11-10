@@ -10,7 +10,9 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.db.session import get_db
-from app.routers import activities, analytics, auth, customers, dashboard, orders, users
+from app.realtime.connection_manager import manager
+from app.routers import activities, analytics, auth, customers, dashboard, notifications, orders, users, ws
+from app.services import notification_publisher
 from app.services.errors import DomainError
 
 logger = logging.getLogger("app.db")
@@ -26,8 +28,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for router_module in (auth, users, dashboard, orders, customers, analytics, activities):
+for router_module in (auth, users, dashboard, orders, customers, analytics, activities, notifications, ws):
     app.include_router(router_module.router)
+
+# Live delivery: the notification service only knows the publisher hook, not WebSockets.
+notification_publisher.set_publisher(manager.publish)
 
 
 # ---------------------------------------------------------------------------
@@ -46,6 +51,7 @@ async def _database_unavailable(_: Request, exc: Exception) -> JSONResponse:
 async def _database_error(_: Request, exc: Exception) -> JSONResponse:
     logger.error("Database query failed: %s", type(exc).__name__)
     return JSONResponse(status_code=500, content={"detail": "A database error occurred."})
+
 
 # ---------------------------------------------------------------------------
 # Business-rule errors (wrong credentials, duplicate email, last admin, ...) -> {"detail": "..."}

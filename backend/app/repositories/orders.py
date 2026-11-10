@@ -1,4 +1,4 @@
-from sqlalchemy import func, select
+from sqlalchemy import Integer, cast, func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.models import Order, Product
@@ -22,3 +22,19 @@ def list_orders(db: Session, limit: int, offset: int, status: str | None) -> tup
     )
     total = db.scalar(select(func.count()).select_from(Order).where(*filters)) or 0
     return list(db.scalars(page).unique().all()), total
+
+
+def get_order(db: Session, order_id: int) -> Order | None:
+    stmt = (
+        select(Order)
+        .options(joinedload(Order.customer), joinedload(Order.product).joinedload(Product.category))
+        .where(Order.id == order_id)
+    )
+    return db.scalars(stmt).unique().first()
+
+
+def next_order_number(db: Session) -> str:
+    """ORD1001, ORD1002, ... continuing after the highest existing number."""
+    suffix = cast(func.substr(Order.order_number, 4), Integer)
+    current = db.scalar(select(func.max(suffix)).where(Order.order_number.like("ORD%")))
+    return f"ORD{(current or 1000) + 1}"

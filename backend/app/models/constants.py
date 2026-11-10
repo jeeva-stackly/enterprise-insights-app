@@ -32,3 +32,24 @@ class UserStatus(StrEnum):
 
 USER_ROLES = tuple(r.value for r in Role)
 USER_STATUSES = tuple(s.value for s in UserStatus)
+
+
+class NotificationType(StrEnum):
+    """Notification categories (revenue, sales, order, customer and system alerts)."""
+
+    REVENUE = "revenue"
+    SALES = "sales"
+    ORDER = "order"
+    CUSTOMER = "customer"
+    SYSTEM = "system"
+
+
+class NotificationPriority(StrEnum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+NOTIFICATION_TYPES = tuple(t.value for t in NotificationType)
+NOTIFICATION_PRIORITIES = tuple(p.value for p in NotificationPriority)

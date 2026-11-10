@@ -4,6 +4,7 @@ Nothing secret is hardcoded here: DATABASE_URL and JWT_SECRET_KEY have no defaul
 so the app refuses to start without them instead of silently using made-up credentials.
 """
 
+from decimal import Decimal
 from functools import lru_cache
 
 from pydantic import Field, SecretStr, field_validator
@@ -27,6 +28,15 @@ class Settings(BaseSettings):
     jwt_secret_key: SecretStr
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = Field(default=60, ge=1, le=1440)
+        # Business alert rules (Task 6). All configurable through environment variables.
+    # An order worth at least this much (INR) triggers a "High-Value Order" alert.
+    high_value_order_threshold: Decimal = Field(default=Decimal("200000"), gt=0)
+    # Revenue (completed orders, INR) for one reporting period: above target = good news, below = warning.
+    revenue_target: Decimal = Field(default=Decimal("250000"), gt=0)
+    # Fewer completed orders than this in one reporting period raises a "Low Sales" alert.
+    low_sales_threshold: int = Field(default=5, ge=1)
+    # Length of the reporting period the two rules above look at (days, ending yesterday).
+    alert_period_days: int = Field(default=1, ge=1, le=30)
 
     # Reporting rules (see README "KPI definitions").
     kpi_period_days: int = Field(default=30, ge=1, le=365)

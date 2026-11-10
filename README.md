@@ -197,3 +197,24 @@ What changed in the numbers: KPI cards now show the 30-day window described in s
 * No authentication; the user name/role come from settings (`DEFAULT_USER_*`).
 * CORS is open (`*`) for development.
 * Tests use SQLite; PostgreSQL-specific behaviour is covered by running the app against PostgreSQL.
+---
+
+## Task 6: Real-Time Business Alerts & Notifications
+
+### Alerts screen
+
+![Alerts screen](docs/screenshots/task6-alerts-screen.png)
+
+### How it works
+
+- **Alert engine (backend):** business rules (high-value order, low stock, etc.) create notifications. Duplicate alerts are prevented with a unique `(user_id, dedupe_key)` index.
+- **Audience:** alerts go only to users whose role has the matching permission (admin, analyst, viewer).
+- **REST APIs:** `GET /api/notifications`, `GET /api/notifications/unread-count`, `PATCH /api/notifications/{id}/read`, `PATCH /api/notifications/read-all`, `DELETE /api/notifications/{id}`, `POST /api/notifications/evaluate` (admin).
+- **Real-time:** WebSocket `/ws/notifications`. The client sends `{"type":"auth","token":"..."}` as its first message, and the server pushes `notification` events instantly.
+- **Mobile:** Alerts tab with unread badge, read/unread state, filters, "Live" connection indicator, auto-reconnect with exponential backoff, optimistic read updates with rollback.
+
+### Tests
+
+- Backend: `pytest` → 151 passed
+- Mobile: `npm test` → 43 passed
+
